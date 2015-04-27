@@ -1,14 +1,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "intel_hex.h"
+#include "FSM.h"
+#include "interrupt_table.h"
 
 int main(int argc, char* argv[]){
     FILE* inp_file;
     FILE* out_file;
-    char* inp_buf = NULL;
+    byte* inp_buf = NULL;
     int inp_buf_size = 0;
     int out_buf_size = 0;
-    int Hex_error_line = 0;
+    char* hex_buf = NULL;
+    int hex_buf_size = 0;
+    int i = 0;
     byte* out_buf = NULL;
 
     if (argc == 0){
@@ -30,7 +34,7 @@ int main(int argc, char* argv[]){
         return 2;
     }
 
-    inp_buf = (char*) calloc (inp_buf_size, sizeof(char));
+    inp_buf = (byte*) calloc (inp_buf_size, sizeof(byte));
 
     if (inp_buf == NULL){
         printf("No memory\n");
@@ -44,8 +48,7 @@ int main(int argc, char* argv[]){
             return 2;
     }
 
-    printf("%d\n", inp_buf_size);
-    out_buf_size = inp_buf_size;
+    out_buf_size = inp_buf_size * 10;
     out_buf = (unsigned char*) calloc (out_buf_size, sizeof(unsigned char)); 
 
     if (out_buf == NULL){
@@ -53,18 +56,56 @@ int main(int argc, char* argv[]){
         return 4;
     }
     
-    Hex_error_line = intel_hex2bin(inp_buf, out_buf, &out_buf_size);
-    printf("%d\n", out_buf_size);
-    //bin_dump(out_buf, out_buf_size, stdout);
-    //free(inp_buf);
+    for (i = 0;i < interrupt_table_size; ++i) {
+        
+        *out_buf = interrupt_table[i];
+        ++out_buf;
 
-    inp_buf = (char*) calloc (inp_buf_size * 2, sizeof(char));
-    bin2intel_hex(out_buf, inp_buf, out_buf_size);
-    out_file = fopen("out.hex", "wb");
-    fwrite(inp_buf, sizeof(char), inp_buf_size, out_file);
+    }
 
-    //free(inp_buf);
+    out_buf_size = FSM_start(inp_buf + 2, inp_buf_size, 
+                             out_buf, out_buf_size);
+
+    FSM_start(inp_buf + 2, inp_buf_size, out_buf, out_buf_size);
+    
+    out_buf_size = FSM_start(inp_buf + 2, inp_buf_size, 
+                             out_buf, out_buf_size);
+
+    out_buf -= interrupt_table_size;
+
+    for (i = 0; i < out_buf_size + interrupt_table_size; ++i){
+
+        printf("%02X ", out_buf[i]);
+
+    }
+
+    hex_buf_size = 3000;
+
+    hex_buf = (char*) calloc (hex_buf_size, sizeof(char));
+    
+    if (hex_buf == NULL){
+        printf("No memory\n");
+        return 4;
+    }
+
+    hex_buf_size = bin2intel_hex(out_buf, hex_buf, 
+                 out_buf_size + interrupt_table_size + 1);
+
+    
+    out_file = fopen("out.hex", "w+b");
+
+    fwrite(hex_buf, sizeof(char), hex_buf_size
+           , out_file);
+          
+
+    fclose(out_file);
+    fclose(inp_file);
+    
+    free(hex_buf);
+    free(inp_buf);
     free(out_buf);
+    
+    printf("Translation complete!\n");
     
     return 0;
 }

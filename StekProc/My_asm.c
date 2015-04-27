@@ -230,6 +230,10 @@ int compile(FILE* source, byte* buffer){
 						
 						buffer[counter] = OUT;
 						++counter;
+						fscanf(source, "%d", &tempint);
+						buffer[counter] = (byte) tempint;
+						++counter;
+						
 						break;
 					case 'c':
 						if (tempcom[1] != 'u' || tempcom[2] != 't'){
@@ -320,6 +324,10 @@ int compile(FILE* source, byte* buffer){
 				
 						buffer[counter] = INP;
 						++counter;
+						fscanf(source, "%d", &tempint);
+						buffer[counter] = (byte) tempint;
+						++counter;
+						
 						break;
 					case 'c':
 						if (tempcom[1] != 'n' || tempcom[2] != 'p'){

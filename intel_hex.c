@@ -37,40 +37,50 @@ int intel_hex2bin(char* inp_buf, byte* out_buf, int* inp_buf_size){
     while (i < *inp_buf_size){
         int j = 0;
         if (*cur_char != ':'){
+			
             CONV_ERR(INCORRECT_FORMAT);
             return ERR_LINE;
+            
         }
         
         ++cur_char;
         data_counter = str_hex2byte(cur_char);
 
         if (data_counter == 0){
+			
             *inp_buf_size = i + 1;
             return 0;
+            
         }
         
         cur_char += 8; /* check !*/ 
         j = data_counter;
         
         while (j--){
+			
             out_buf[i] = str_hex2byte(cur_char);
             ++i;
             cur_char += 2;
+            
         }
 
         sum = (byte) ((int) chk_sum(out_buf + i - data_counter, data_counter)
                       + (i - 1) / 256 + i % 256);
 
         if ((byte) (0 - sum) != str_hex2byte(cur_char)){
+			
             CONV_ERR(WRONG_SUM);   
             return ERR_LINE;
+            
         }
 
         cur_char += 3;
 
         if (*cur_char != '\n'){
+			
             CONV_ERR(INCORRECT_FORMAT);
             return ERR_LINE;
+            
         }
 
         ++cur_char;
@@ -135,6 +145,7 @@ int bin2intel_hex(byte* inp_buf, char* out_buf, int inp_buf_size){
 #define LINE_CUT(x) (x / byte_line_size) * byte_line_size
     int i = 0;
     int j = inp_buf_size;
+    char* begin_buf = out_buf;
 
     sprintf(out_buf, "%s", first_hex_str);
 
@@ -143,43 +154,57 @@ int bin2intel_hex(byte* inp_buf, char* out_buf, int inp_buf_size){
     while (j--){
         
         if ((!(i % byte_line_size) || i == inp_buf_size - 1) && i != 0) {
+
             byte sum = 0;
+
             if (inp_buf_size - i > 1 || !(i % byte_line_size))
+            
                 sum = chk_sum(inp_buf + i - byte_line_size,
                               byte_line_size);
+                              
             else {
+				
                 sum = chk_sum(inp_buf + i + LINE_CUT(i) - inp_buf_size + 1,
                               inp_buf_size - LINE_CUT(i));
             }
 
             sprintf(out_buf, "%02X",(byte)((byte) 0 - (byte)
-                                    ((int) sum + (i - 1) / 256 + i % 256)));  
+                    ((int) sum + (i - 1) / 256 + i % 256)));  
             out_buf += 2;
 
             if (i != inp_buf_size - 1){
+				
                 sprintf(out_buf, "\x0D\n:%1X%1X%04X00", !NEW_HEX_LINE(j),
                         (j % byte_line_size) * NEW_HEX_LINE(j),  i); 
-            out_buf += 11;
+				out_buf += 11;
+				
             }
             else {
                 sprintf(out_buf, "\x0d\n%s", end_hex_str);
-                return 0;
+                out_buf += end_hex_str_size;
+                return out_buf - begin_buf;
             }
 
         }
         
         if (i == 0) {
+			
             sprintf(out_buf, ":10000000");
             out_buf += 9;
+            
         }
 
         sprintf(out_buf, "%02X",(byte) inp_buf[i]);
+
         out_buf += 2;
         ++i;
     }
+    
     sprintf(out_buf, "%s\n", end_hex_str);
+    out_buf += end_hex_str_size;
 
-    return 0;
+    return out_buf - begin_buf;
+    
 #undef LINE_CUT
 #undef NEW_HEX_LINE
 }

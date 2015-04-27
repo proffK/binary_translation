@@ -1,0 +1,8 @@
+div
+div
+push r23
+:1
+out 5
+jp 1
+div
+div

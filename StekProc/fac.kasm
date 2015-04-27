@@ -1,14 +1,12 @@
 push 0
 inp
-push 1
-out
+out 5
 /Входное число
 push 1
 pop r0
 call 1
 push r0
-push 1
-out
+out 5
 
 /Область функций
 jp 11

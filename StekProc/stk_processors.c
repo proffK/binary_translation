@@ -382,10 +382,11 @@ int processor_start(processor* proc, FILE* input_stream, FILE* output_stream){
 					case OUT:
 						++proc -> counter; 
 						temp1 = pop(proc -> stk);
-						if (temp1 == 1)
-							fprintf(stdout, "%d", pop(proc -> stk)); 
+						++proc -> counter;
+						if (proc -> data[proc -> counter] == 1)
+							fprintf(stdout, "%d", temp1); 
 						else
-							fprintf((FILE*) temp1, "%d", pop(proc -> stk));
+							fprintf((FILE*) proc -> data[proc -> counter], "%d", temp1);
 						break; 
 					case CALL:
 						++proc -> counter;
