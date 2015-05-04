@@ -1,8 +1,37 @@
-div
-div
-push r23
+push 255
+out 4
+push 0
+pop r17
 :1
+push r17
 out 5
+call 3
+push 0
+out 5
+call 3
+push r17
+push 1
+add
+pop r17
 jp 1
-div
-div
+:3
+push 255  
+pop r18
+push 255
+pop r19
+:4
+push r19  
+push 1
+sub
+pop r19
+push r19
+push 0
+jne 4
+push r18
+push 1
+sub
+pop r18
+push r18
+push 0
+jne 4
+ret
