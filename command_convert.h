@@ -3,6 +3,39 @@ typedef unsigned char byte;
 
 const int ENDIAN = 1; // 1 - little endian, 0 - big endian
 
+extern enum state {
+   ST_INIT,
+   ST_WT,      //WAIT
+   ST_END,
+   ST_RPUSH,
+   ST_PUSH, 
+   ST_POP ,
+   ST_ADD ,
+   ST_SUB ,
+   ST_MUL ,
+   ST_DIV ,
+   ST_OUT ,
+   ST_CALL,
+   ST_RET ,
+   ST_JE  ,
+   ST_JNE ,
+   ST_JB  ,
+   ST_JNB ,
+   ST_JA  ,
+   ST_JNA ,
+   ST_INP ,
+   ST_PKPO,
+   ST_PUPO,
+   ST_PUOU,
+   ST_PUPU,
+   ST_PPJN,
+   ST_PUPK,
+   ST_PKJN,
+   ST_UKSU,
+   ST_JP  
+};
+
+
 enum commands{
     END = -1, 
     RPUSH = 0,  
@@ -25,7 +58,7 @@ enum commands{
 	JP = 17
 };
 
-const char* stack_proc2avr[JP + 1] = {
+const char* stack_proc2avr[ST_JP + 1] = {
     "1110kkkkttttkkkk"
     "1001001ttttt1111", //RPUSH == ldi temp, const
                         //         push temp
@@ -36,13 +69,13 @@ const char* stack_proc2avr[JP + 1] = {
                         //
     "1001000ttttt1111"  //ADD   == pop temp1
     "1001000TTTTT1111"  //         pop temp2
-    "000011tTttttTTTT"  //         add temp1, temp2
-    "1001001ttttt1111", //         push temp1
+    "000011TtTTTTtttt"  //         add temp2, temp1
+    "1001001TTTTT1111", //         push temp1
                         //
     "1001000ttttt1111"  //SUB   == pop temp1
     "1001000TTTTT1111"  //         pop temp2
-    "000110tTttttTTTT"  //         sub temp1, temp2
-    "1001001ttttt1111", //         push temp1
+    "000110TtTTTTtttt"  //         sub temp2, temp1
+    "1001001TTTTT1111", //         push temp1
                         //
     "1001000ttttt1111"  //MUL   == pop temp1
     "1001000TTTTT1111"  //         pop temp2
@@ -72,7 +105,7 @@ const char* stack_proc2avr[JP + 1] = {
     "1001000ttttt1111"  //JNE   == pop temp1
     "1001000TTTTT1111"  //         pop temp2
     "000101tTttttTTTT"  //         cp temp1, temp2
-    "111100aaaaaaa001", //         brne relative_adress
+    "111101aaaaaaa001", //         brne relative_adress
                         //
     "1001000ttttt1111"  //JB    == pop temp1
     "1001000TTTTT1111"  //         pop temp2
@@ -94,10 +127,35 @@ const char* stack_proc2avr[JP + 1] = {
     "000101tTttttTTTT"  //         cp temp1, temp2
     "111101aaaaaaa000", //         brsh relative_adress
                         //
-    "1001000ttttt1111"  //INP   == pop temp1
-    "10110kktttttkkkk", //         in const, temp1
-                        //
-    "1100aaaaaaaaaaaa"  //JP     == rjmp relative_adress
+    "10110kktttttkkkk"  //INP   == in const, temp1
+    "1001001ttttt1111", //         push temp1
+    
+    "1110kkkkttttkkkk"  //PUSHK+POP == ldi temp, const
+    "001011rtrrrrtttt", //             mov reg, temp
+
+    "001011RrRRRRrrrr", //PUSH+POP  == mov reg1, reg2
+    
+    "10111kkrrrrrkkkk", //PUSH+OUT  == out port, reg1
+    
+    "1001001rrrrr1111"
+    "1001001RRRRR1111", //PUSH+PUSH == push reg1, push reg2
+    
+	"000101RrRRRRrrrr"  //PUSH+PUSH+JNE = cp reg1, reg2
+    "111101aaaaaaa001", //                brne relative_adress
+    
+    "1001001rrrrr1111"  //PUSH+PUSHK
+    "1110kkkkttttkkkk"
+    "1001001ttttt1111",
+    
+	"0011kkkkrrrrkkkk"  //PUSH+PUSHK+JNE
+	"111101aaaaaaa001", 
+	
+	"001011trttttrrrr"  //                  mov temp ,reg
+	"0101kkkkttttkkkk"  //PUSH+PUSHK+SUB == subi temp, const
+	"1001001ttttt1111", //                  push temp
+
+    "1100aaaaaaaaaaaa" //JP     == rjmp relative_adress
+
 };
 
 enum arg_types {
@@ -126,11 +184,14 @@ const int arg_type[JP + 1] = {
    ADR,     // JA   
    ADR,     // JNA  
    CONST,   // INP  
-   ADR      // JP   
+   ADR      // JP  
 };
 
-const int command_size[JP + 1] = {
+const int command_size[ST_JP + 1] = {
             	
+   0,
+   0,
+   0,
    4,       // RPUSH
    2,       // PUSH 
    2,       // POP  
@@ -147,8 +208,16 @@ const int command_size[JP + 1] = {
    8,       // JNB  
    8,       // JA   
    8,       // JNA  
-   4,       // INP  
-   2        // JP   
+   4,       // INP
+   4,
+   2,
+   2,
+   4,
+   4,
+   6,
+   4,
+   6,  
+   2       // JP   
 };
 
 int command_convert(const char* convert_array[], byte* out_command,

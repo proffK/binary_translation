@@ -74,7 +74,15 @@ enum state {
    ST_JA  ,
    ST_JNA ,
    ST_INP ,
-   ST_JP   
+   ST_PKPO,
+   ST_PUPO,
+   ST_PUOU,
+   ST_PUPU,
+   ST_PPJN,
+   ST_PUPK,
+   ST_PKJN,
+   ST_UKSU,
+   ST_JP  
 };
 
 int record();

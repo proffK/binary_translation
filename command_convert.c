@@ -21,8 +21,7 @@ int command_convert(const char* convert_array[], byte* out_command
     int reg1 = reg_list[0];
     int reg2 = reg_list[1];
     int cst1 = const_list[0];
-    int cst2 = const_list[1];
-    unsigned int adr1 = addr_list[0] - 2;
+    unsigned int adr1 = addr_list[0] - command_size[state + 3] / 2;
     const int MAX_LEN = 1000;
     char temp_str[1000] = {0};
     int tmp_coun1 = 0, tmp_coun2 = 0;
@@ -32,6 +31,14 @@ int command_convert(const char* convert_array[], byte* out_command
     if (com_len > MAX_LEN) return -1;
 
     while (com_len--) {
+		
+		if (com_len % 16 == 0) {
+			
+			tmp1 = temp_list[0];
+			tmp2 = temp_list[1];
+			tmp_coun1 = tmp_coun2 = 0;
+			
+		}
 
         cur_char = convert_array[state][com_len];
         //printf ("\n%c", cur_char);
@@ -70,6 +77,10 @@ int command_convert(const char* convert_array[], byte* out_command
                 temp_str[com_len] = reg1 % 2 + '0';
                 reg1 /= 2;
                 break;
+            case 'R':
+                temp_str[com_len] = reg2 % 2 + '0';
+                reg2 /= 2;
+                break;
             case 'k':
                 temp_str[com_len] = cst1 % 2 + '0';
                 cst1 /= 2;
@@ -83,7 +94,7 @@ int command_convert(const char* convert_array[], byte* out_command
 
         //printf (" %c\n", temp_str[com_len]);
     }
-    //printf("\n%s\n", temp_str);
+    printf("\n%s\n", temp_str);
     
     return bin_str2byte(temp_str, out_command, ENDIAN);
 
